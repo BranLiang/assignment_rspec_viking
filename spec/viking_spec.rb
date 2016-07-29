@@ -7,6 +7,10 @@ describe Viking do
   let(:oleg){ Viking.new("Oleg") }
   let(:bran){ Viking.new("Bran") }
 
+  before do
+    allow($stdout).to receive(:puts)
+  end
+
   describe '#initialize' do
     it 'set up with a name' do
       new_viking = Viking.new("Bran")
@@ -17,20 +21,24 @@ describe Viking do
       expect(new_viking.health).to eq(101)
     end
     it 'can not over written the health value' do
-      new_viking = Viking.new("Bran", 110)
-      expect(new_viking.health).to eq(110)
-      expect{ new_viking.health = 120 }.to raise_error(NoMethodError)
+      expect{ viking.health = 120 }.to raise_error(NoMethodError)
     end
     it 'has no weapon when initialized' do
       expect(viking.weapon).to be_nil
     end
   end
+
   describe '#pick_up_weapon' do
     it 'can pick up viking weapon' do
       axe = instance_double("Weapon", :name)
       allow(axe).to receive(:is_a?).with(Weapon).and_return(true)
       viking.pick_up_weapon(axe)
       expect(viking.weapon).to eq(axe)
+    end
+    it 'sets a weapon as the viking weapon' do
+      b = Bow.new
+      viking.pick_up_weapon(b)
+      expect(viking.weapon).to equal(b)
     end
     it 'can not pick none viking weapon' do
       none_viking_weapon = double
@@ -65,6 +73,7 @@ describe Viking do
       expect(viking.health).to eq(90)
     end
     it 'calls the take_damage method' do
+      allow(viking).to receive(:take_damage).and_return(90)
       expect(viking).to receive(:take_damage)
       viking.receive_attack(10)
     end
@@ -86,7 +95,46 @@ describe Viking do
       expect(bran).to receive(:damage_with_fists)
       bran.attack(oleg)
     end
-    it 'with no weapon deals Fists multiplier times strength damage'
-    it 'with a weapon runs damage_with_weapon'
+    it 'with no weapon deals Fists multiplier times strength damage' do
+      viking.drop_weapon
+      fists_multiplier = Fists.new.use
+      expected_damage = viking.strength * fists_multiplier
+      expect(oleg).to receive(:receive_attack).with(expected_damage)
+      bran.attack(oleg)
+    end
+    context 'when attacking with a weapon' do
+
+      it 'runs #damage_with_weapon' do
+        a = Axe.new
+        bran.pick_up_weapon(a)
+        allow(bran).to receive(:damage_with_weapon).and_return(77)
+        expect(bran).to receive(:damage_with_weapon)
+        bran.attack(oleg)
+      end
+      it 'deals damage equal to vikings strength times weapon multiplier' do
+        a = Axe.new
+        axe_multiplier = a.use
+        viking.pick_up_weapon(a)
+        expected_damage = axe_multiplier * viking.strength
+        expect(oleg).to receive(:receive_attack).with(expected_damage)
+        viking.attack(oleg)
+      end
+    end
+    context 'when using an empty Bow' do
+      let(:empty_bow){ Bow.new(0) }
+      it 'uses #damage_with_fists instead' do
+        bran.pick_up_weapon(empty_bow)
+        allow(bran).to receive(:damage_with_fists).and_return(2.5)
+        expect(bran).to receive(:damage_with_fists)
+        bran.attack(oleg)
+      end
+    end
+
+    it 'raises an error if it kills a Viking' do
+      dying_viking = Viking.new("Beowulf", 1)
+      allow(viking).to receive(:damage_dealt).and_return(100)
+      expect{ viking.attack(dying_viking) }.to raise_error("Beowulf has Died...")
+    end
+
   end
 end
