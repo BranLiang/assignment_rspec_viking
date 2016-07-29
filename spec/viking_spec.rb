@@ -86,17 +86,7 @@ describe Viking do
       expect(bran).to receive(:damage_with_fists)
       bran.attack(oleg)
     end
-    it 'with no weapon deals Fists multiplier times strength damage' do
-
-    end
-    it 'with a weapon runs damage_with_weapon' do
-      # binding.pry
-      # axe = instance_double("Weapon",name: "axe", use: 1)
-      weapon = double("weapon", use: 2)
-      expect(bran).to receive(:pick_up_weapon).with(weapon)
-      # expect(bran).to receive(:weapon).and_return(axe)
-      expect(bran).to receive(:damage_with_weapon)
-      bran.attack(oleg)
-    end
+    it 'with no weapon deals Fists multiplier times strength damage'
+    it 'with a weapon runs damage_with_weapon'
   end
 end
